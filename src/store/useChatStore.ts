@@ -1,0 +1,45 @@
+import { create } from 'zustand';
+
+export interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'ai';
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+}
+
+interface ChatState {
+  conversations: Conversation[];
+  activeConversationId: string | null;
+  messages: Message[];
+  isTyping: boolean;
+  setConversations: (conversations: Conversation[]) => void;
+  setActiveConversation: (id: string | null) => void;
+  setMessages: (messages: Message[]) => void;
+  addMessage: (message: Message) => void;
+  updateMessageStream: (id: string, content: string) => void;
+  setTyping: (isTyping: boolean) => void;
+}
+
+export const useChatStore = create<ChatState>((set) => ({
+  conversations: [],
+  activeConversationId: null,
+  messages: [],
+  isTyping: false,
+  setConversations: (conversations) => set({ conversations }),
+  setActiveConversation: (id) => set({ activeConversationId: id }),
+  setMessages: (messages) => set({ messages }),
+  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+  updateMessageStream: (id, content) =>
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === id ? { ...m, content: m.content + content } : m
+      ),
+    })),
+  setTyping: (isTyping) => set({ isTyping }),
+}));
