@@ -6,22 +6,31 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ThemeToggle } from '../ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { chatApi } from '../../services/api';
 
 export function Sidebar() {
   const { conversations, activeConversationId, setActiveConversation, setConversations } = useChatStore();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  // Mock initial conversations load
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    if (conversations.length === 0) {
-      setConversations([
-        { id: '1', title: 'React Hooks Explained', createdAt: new Date().toISOString() },
-        { id: '2', title: 'C# SignalR Setup', createdAt: new Date().toISOString() },
-      ]);
-    }
-  }, []);
+    const fetchConversations = async () => {
+      setLoading(true);
+      try {
+        const response = await chatApi.getConversations();
+        setConversations(response.data);
+      } catch (error) {
+        console.error('Failed to fetch conversations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, [setConversations]);
 
   const handleNewChat = () => {
     setActiveConversation(null);

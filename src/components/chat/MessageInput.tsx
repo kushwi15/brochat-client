@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { Send, Square } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useChatStore } from '../../store/useChatStore';
+import { chatApi } from '../../services/api';
+import { signalRService } from '../../services/signalrService';
+import { useNavigate } from 'react-router-dom';
 
 export function MessageInput() {
   const [input, setInput] = useState('');
-  const { addMessage, isTyping, setTyping } = useChatStore();
+  const { addMessage, isTyping, setTyping, activeConversationId, setActiveConversation, setConversations, conversations } = useChatStore();
+  const navigate = useNavigate();
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -21,33 +25,28 @@ export function MessageInput() {
     setInput('');
     setTyping(true);
 
-    // Mock API call / SignalR send
-    // In a real app, you would send this to the backend
-    // await api.post('/chat/message', { conversationId: activeConversationId, content: userMessage.content });
+    try {
+      let currentConvId = activeConversationId;
 
-    // Mocking a response for demonstration if SignalR is not connected
-    setTimeout(() => {
-      const aiMessageId = (Date.now() + 1).toString();
-      addMessage({
-        id: aiMessageId,
-        role: 'ai',
-        content: '',
-        createdAt: new Date().toISOString(),
-      });
-      
-      const responseText = "This is a mocked streaming response from the AI. In a real environment, this would come through SignalR!";
-      let i = 0;
-      
-      const interval = setInterval(() => {
-        if (i < responseText.length) {
-          useChatStore.getState().updateMessageStream(aiMessageId, responseText.charAt(i));
-          i++;
-        } else {
-          clearInterval(interval);
-          setTyping(false);
-        }
-      }, 30);
-    }, 1000);
+      // If no active conversation, create one
+      if (!currentConvId) {
+        const title = input.trim().substring(0, 30) + (input.trim().length > 30 ? '...' : '');
+        const response = await chatApi.createConversation(title);
+        const newConv = response.data;
+        
+        currentConvId = newConv.id;
+        setConversations([newConv, ...conversations]);
+        setActiveConversation(currentConvId);
+        navigate(`/c/${currentConvId}`);
+      }
+
+      // Send via SignalR
+      await signalRService.sendMessage(currentConvId, input.trim());
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setTyping(false);
+      // Optional: Add error message to chat
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

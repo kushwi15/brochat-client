@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/useChatStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
@@ -7,6 +8,7 @@ import { Bot, User } from 'lucide-react';
 
 export function MessageList() {
   const { messages, isTyping } = useChatStore();
+  const { user } = useAuthStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,13 +43,17 @@ export function MessageList() {
             )}
           >
             <Avatar className={cn(
-              "w-8 h-8 flex-shrink-0 border",
-              msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted"
+              "w-8 h-8 flex-shrink-0 border-none",
+              msg.role === 'user' ? "bg-primary" : "bg-muted"
             )}>
               {msg.role === 'user' ? (
-                <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold border-none">
+                  {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
               ) : (
-                <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                <AvatarFallback className="bg-muted text-muted-foreground border-none">
+                  <Bot className="w-4 h-4" />
+                </AvatarFallback>
               )}
             </Avatar>
             

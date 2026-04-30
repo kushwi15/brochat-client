@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Button } from '../../components/ui/button';
 import {
@@ -26,6 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const form = useForm<LoginFormValues>({
@@ -38,20 +41,15 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // Mock API call or use real endpoint if available
-      // const response = await api.post('/auth/login', data);
-      // setAuth(response.data.token, response.data.user);
+      const response = await api.post('/auth/login', data);
+      const { accessToken, userId, email } = response.data;
       
-      // Mock login for now
-      if (data.email === 'test@example.com' && data.password === 'password') {
-         setAuth('mock-token', { id: '1', name: 'Test User', email: data.email });
-         toast.success('Logged in successfully');
-         navigate('/');
-      } else {
-         toast.error('Invalid credentials (use test@example.com / password)');
-      }
-    } catch (error) {
-      toast.error('Failed to log in');
+      setAuth(accessToken, { id: userId, email, name: email.split('@')[0] });
+      toast.success('Logged in successfully');
+      navigate('/');
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to log in';
+      toast.error(message);
     }
   };
 
@@ -92,7 +90,22 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <div className="relative">
+                        <Input type={showPassword ? 'text' : 'password'} {...field} />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

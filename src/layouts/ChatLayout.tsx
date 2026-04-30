@@ -1,12 +1,21 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/chat/Sidebar';
 import { useAppStore } from '../store/useAppStore';
+import { useEffect } from 'react';
+import { signalRService } from '../services/signalrService';
 import { cn } from '../lib/utils';
 import { Menu } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 export default function ChatLayout() {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
+
+  useEffect(() => {
+    signalRService.startConnection();
+    return () => {
+      signalRService.stopConnection();
+    };
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

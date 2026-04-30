@@ -36,10 +36,22 @@ export const useChatStore = create<ChatState>((set) => ({
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
   updateMessageStream: (id, content) =>
-    set((state) => ({
-      messages: state.messages.map((m) =>
-        m.id === id ? { ...m, content: m.content + content } : m
-      ),
-    })),
+    set((state) => {
+      const messageExists = state.messages.some((m) => m.id === id);
+      if (!messageExists) {
+        const newMessage: Message = {
+          id,
+          content,
+          role: 'ai',
+          createdAt: new Date().toISOString(),
+        };
+        return { messages: [...state.messages, newMessage] };
+      }
+      return {
+        messages: state.messages.map((m) =>
+          m.id === id ? { ...m, content: m.content + content } : m
+        ),
+      };
+    }),
   setTyping: (isTyping) => set({ isTyping }),
 }));
