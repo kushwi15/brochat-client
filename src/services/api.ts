@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5110/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -33,3 +33,10 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const chatApi = {
+  getConversations: () => api.get('/chat/conversations'),
+  createConversation: (title: string) => api.post('/chat/conversation', { title }),
+  getMessages: (conversationId: string) => api.get(`/chat/${conversationId}/messages`),
+  deleteConversation: (id: string) => api.delete(`/chat/${id}`),
+};

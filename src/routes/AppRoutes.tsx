@@ -1,27 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 import ChatPage from '../pages/chat/ChatPage';
 import ChatLayout from '../layouts/ChatLayout';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-};
+import { PublicRoute } from '../components/auth/PublicRoute';
 
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  return <>{children}</>;
-};
-
-export const AppRoutes = () => {
+export function AppRoutes() {
   return (
     <Routes>
       <Route
@@ -44,9 +29,7 @@ export const AppRoutes = () => {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <ChatLayout />
-          </ProtectedRoute>
+          <ChatLayout />
         }
       >
         <Route index element={<ChatPage />} />

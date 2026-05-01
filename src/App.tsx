@@ -1,13 +1,18 @@
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from './routes/AppRoutes';
+import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 
 function App() {
   const theme = useAppStore((state) => state.theme);
+  const { initializeGuest, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      initializeGuest();
+    }
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -25,7 +30,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
-      <Toaster />
+      <Toaster richColors position="top-center" closeButton expand />
     </BrowserRouter>
   );
 }
