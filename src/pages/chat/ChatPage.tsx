@@ -3,39 +3,49 @@ import { useParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { MessageList } from '../../components/chat/MessageList';
 import { MessageInput } from '../../components/chat/MessageInput';
-import { signalRService } from '../../services/signalrService';
+import { Preloader } from '../../components/ui/Preloader';
+
+import { chatApi } from '../../services/api';
+import type { Message } from '../../store/useChatStore';
 
 export default function ChatPage() {
   const { conversationId } = useParams();
-  const { setActiveConversation, setMessages } = useChatStore();
+  const { setActiveConversation, setMessages, isLoading, setLoading } = useChatStore();
 
   useEffect(() => {
-    // Start SignalR connection when chat page mounts
-    signalRService.startConnection();
+    const fetchMessages = async () => {
+      if (!conversationId) {
+        setActiveConversation(null);
+        setMessages([]);
+        return;
+      }
 
-    return () => {
-      signalRService.stopConnection();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (conversationId) {
+      setLoading(true);
       setActiveConversation(conversationId);
-      // Mock loading messages for the conversation
-      setMessages([
-        { id: 'm1', role: 'user', content: 'Hello! Can you help me with React?', createdAt: new Date().toISOString() },
-        { id: 'm2', role: 'ai', content: 'Of course! I can help you with React. What do you need to know?', createdAt: new Date().toISOString() },
-      ]);
-    } else {
-      setActiveConversation(null);
-      setMessages([]);
-    }
-  }, [conversationId, setActiveConversation, setMessages]);
+      try {
+        const response = await chatApi.getMessages(conversationId);
+        const mappedMessages: Message[] = response.data.map((m: any) => ({
+          id: m.id,
+          role: m.role === 0 ? 'user' : 'ai',
+          content: m.content,
+          createdAt: m.timestamp
+        }));
+        setMessages(mappedMessages);
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [conversationId, setActiveConversation, setMessages, setLoading]);
 
   return (
     <div className="flex flex-col h-full bg-background relative">
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden relative">
+        {isLoading && <Preloader />}
         <MessageList />
       </div>
 

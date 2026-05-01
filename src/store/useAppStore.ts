@@ -6,6 +6,8 @@ interface AppState {
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   sidebarOpen: boolean;
   setSidebarOpen: (isOpen: boolean) => void;
+  isGuestLimitModalOpen: boolean;
+  setGuestLimitModalOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -17,9 +19,12 @@ export const useAppStore = create<AppState>()(
       },
       sidebarOpen: false,
       setSidebarOpen: (isOpen) => set({ sidebarOpen: isOpen }),
+      isGuestLimitModalOpen: false,
+      setGuestLimitModalOpen: (open) => set({ isGuestLimitModalOpen: open }),
     }),
     {
       name: 'app-storage',
+      partialize: (state) => ({ theme: state.theme, sidebarOpen: state.sidebarOpen }),
     }
   )
 );
