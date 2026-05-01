@@ -28,6 +28,8 @@ interface ChatState {
   setTyping: (isTyping: boolean) => void;
   deleteConversation: (id: string) => void;
   clearChat: () => void;
+  inputText: string;
+  setInputText: (text: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -36,10 +38,12 @@ export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   isTyping: false,
   isLoading: false,
+  inputText: '',
   setConversations: (conversations) => set({ conversations }),
   setActiveConversation: (id) => set({ activeConversationId: id }),
   setMessages: (messages) => set({ messages }),
   setLoading: (isLoading) => set({ isLoading }),
+  setInputText: (inputText) => set({ inputText }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
   updateMessageStream: (id, content) =>
     set((state) => {
@@ -59,12 +63,12 @@ export const useChatStore = create<ChatState>((set) => ({
         ),
       };
     }),
-  setTyping: (isTyping) => set({ isTyping }),
+  setTyping: (isTyping: boolean) => set({ isTyping }),
   deleteConversation: (id) =>
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== id),
       activeConversationId: state.activeConversationId === id ? null : state.activeConversationId,
       messages: state.activeConversationId === id ? [] : state.messages,
     })),
-  clearChat: () => set({ conversations: [], activeConversationId: null, messages: [], isTyping: false, isLoading: false }),
+  clearChat: () => set({ conversations: [], activeConversationId: null, messages: [], isTyping: false, isLoading: false, inputText: '' }),
 }));

@@ -7,9 +7,12 @@ import { cn } from '../../lib/utils';
 import { Bot, Sparkles, MessageSquare, Code, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useSendMessage } from '../../hooks/useSendMessage';
+
 export function MessageList() {
   const { messages, isTyping } = useChatStore();
   const { user } = useAuthStore();
+  const { sendMessage } = useSendMessage();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,6 +20,10 @@ export function MessageList() {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
+
+  const handlePromptClick = (prompt: string) => {
+    sendMessage(prompt);
+  };
 
   if (messages.length === 0) {
     return (
@@ -42,19 +49,20 @@ export function MessageList() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
             {[
-              { icon: MessageSquare, title: "Explain anything", desc: "Complex topics made simple" },
-              { icon: Code, title: "Write & Debug", desc: "Instant code help and reviews" },
-              { icon: Lightbulb, title: "Brainstorm", desc: "Ideas for your next project" },
-              { icon: Sparkles, title: "And more...", desc: "Just ask and I'll help!" }
+              { icon: MessageSquare, title: "Explain anything", desc: "Complex topics made simple", prompt: "Explain how quantum computing works in simple terms." },
+              { icon: Code, title: "Write & Debug", desc: "Instant code help and reviews", prompt: "Write a clean React component for a responsive navigation bar." },
+              { icon: Lightbulb, title: "Brainstorm", desc: "Ideas for your next project", prompt: "Brainstorm 5 unique startup ideas for a sustainable lifestyle." },
+              { icon: Sparkles, title: "And more...", desc: "Just ask and I'll help!", prompt: "What are some interesting things I can ask you?" }
             ].map((item, i) => (
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + (i * 0.1) }}
-                className="p-4 rounded-xl border bg-card hover:shadow-md transition-shadow cursor-default"
+                onClick={() => handlePromptClick(item.prompt)}
+                className="p-4 rounded-xl border bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group"
               >
-                <item.icon className="w-5 h-5 text-primary mb-2" />
+                <item.icon className="w-5 h-5 text-primary mb-2 group-hover:scale-110 transition-transform" />
                 <h3 className="font-medium text-sm">{item.title}</h3>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>
               </motion.div>
@@ -86,7 +94,7 @@ export function MessageList() {
               )}>
                 {msg.role === 'user' ? (
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold border-none">
-                    {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 ) : (
                   <AvatarFallback className="bg-muted text-muted-foreground border-none">

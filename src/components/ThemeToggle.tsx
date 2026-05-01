@@ -6,9 +6,8 @@ export function ThemeToggle() {
   const { theme, setTheme } = useAppStore();
 
   const toggleTheme = () => {
-    if (theme === 'light') setTheme('dark');
-    else if (theme === 'dark') setTheme('system');
-    else setTheme('light');
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(isDark ? 'light' : 'dark');
   };
 
   return (
