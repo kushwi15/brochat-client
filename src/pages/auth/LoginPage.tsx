@@ -174,7 +174,10 @@ export default function LoginPage() {
               </Button>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2 text-center pb-8">
+          <CardFooter className="flex flex-col space-y-4 text-center pb-8">
+            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Forgot your password?
+            </Link>
             <div className="text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
               <Link to="/register" className="text-primary font-semibold hover:underline">
