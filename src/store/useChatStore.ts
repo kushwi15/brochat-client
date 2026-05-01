@@ -24,6 +24,7 @@ interface ChatState {
   addMessage: (message: Message) => void;
   updateMessageStream: (id: string, content: string) => void;
   setTyping: (isTyping: boolean) => void;
+  deleteConversation: (id: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -54,4 +55,10 @@ export const useChatStore = create<ChatState>((set) => ({
       };
     }),
   setTyping: (isTyping) => set({ isTyping }),
+  deleteConversation: (id) =>
+    set((state) => ({
+      conversations: state.conversations.filter((c) => c.id !== id),
+      activeConversationId: state.activeConversationId === id ? null : state.activeConversationId,
+      messages: state.activeConversationId === id ? [] : state.messages,
+    })),
 }));

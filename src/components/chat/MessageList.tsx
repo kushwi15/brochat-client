@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
-import { Bot, User } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 export function MessageList() {
   const { messages, isTyping } = useChatStore();

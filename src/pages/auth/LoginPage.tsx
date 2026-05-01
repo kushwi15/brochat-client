@@ -44,7 +44,7 @@ export default function LoginPage() {
       const response = await api.post('/auth/login', data);
       const { accessToken, userId, email } = response.data;
       
-      setAuth(accessToken, { id: userId, email, name: email.split('@')[0] });
+      setAuth(accessToken, { id: userId, email, name: response.data.name });
       toast.success('Logged in successfully');
       navigate('/');
     } catch (error: any) {

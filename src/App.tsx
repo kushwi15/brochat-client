@@ -25,7 +25,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
-      <Toaster />
+      <Toaster richColors position="top-center" closeButton expand />
     </BrowserRouter>
   );
 }

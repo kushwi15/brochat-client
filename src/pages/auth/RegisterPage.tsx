@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
+
 import { Button } from '../../components/ui/button';
 import {
   Form,
@@ -35,7 +35,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const setAuth = useAuthStore((state) => state.setAuth);
+
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -50,6 +50,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     try {
       await api.post('/auth/register', {
+        name: data.name,
         email: data.email,
         password: data.password
       });

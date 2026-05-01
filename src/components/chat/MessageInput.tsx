@@ -40,6 +40,8 @@ export function MessageInput() {
         navigate(`/c/${currentConvId}`);
       }
 
+      if (!currentConvId) return;
+
       // Send via SignalR
       await signalRService.sendMessage(currentConvId, input.trim());
     } catch (error) {

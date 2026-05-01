@@ -38,4 +38,5 @@ export const chatApi = {
   getConversations: () => api.get('/chat/conversations'),
   createConversation: (title: string) => api.post('/chat/conversation', { title }),
   getMessages: (conversationId: string) => api.get(`/chat/${conversationId}/messages`),
+  deleteConversation: (id: string) => api.delete(`/chat/${id}`),
 };

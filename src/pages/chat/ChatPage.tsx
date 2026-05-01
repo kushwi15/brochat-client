@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { MessageList } from '../../components/chat/MessageList';
 import { MessageInput } from '../../components/chat/MessageInput';
-import { signalRService } from '../../services/signalrService';
+
 import { chatApi } from '../../services/api';
 import type { Message } from '../../store/useChatStore';
 
