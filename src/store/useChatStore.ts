@@ -18,13 +18,16 @@ interface ChatState {
   activeConversationId: string | null;
   messages: Message[];
   isTyping: boolean;
+  isLoading: boolean;
   setConversations: (conversations: Conversation[]) => void;
   setActiveConversation: (id: string | null) => void;
   setMessages: (messages: Message[]) => void;
+  setLoading: (isLoading: boolean) => void;
   addMessage: (message: Message) => void;
   updateMessageStream: (id: string, content: string) => void;
   setTyping: (isTyping: boolean) => void;
   deleteConversation: (id: string) => void;
+  clearChat: () => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -32,9 +35,11 @@ export const useChatStore = create<ChatState>((set) => ({
   activeConversationId: null,
   messages: [],
   isTyping: false,
+  isLoading: false,
   setConversations: (conversations) => set({ conversations }),
   setActiveConversation: (id) => set({ activeConversationId: id }),
   setMessages: (messages) => set({ messages }),
+  setLoading: (isLoading) => set({ isLoading }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
   updateMessageStream: (id, content) =>
     set((state) => {
@@ -61,4 +66,5 @@ export const useChatStore = create<ChatState>((set) => ({
       activeConversationId: state.activeConversationId === id ? null : state.activeConversationId,
       messages: state.activeConversationId === id ? [] : state.messages,
     })),
+  clearChat: () => set({ conversations: [], activeConversationId: null, messages: [], isTyping: false, isLoading: false }),
 }));

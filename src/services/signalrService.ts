@@ -1,6 +1,8 @@
 import * as signalR from '@microsoft/signalr';
 import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
+import { useAppStore } from '../store/useAppStore';
+import { toast } from 'sonner';
 
 const HUB_URL = import.meta.env.VITE_HUB_URL || 'http://localhost:5110/hubs/chat';
 
@@ -14,12 +16,9 @@ class SignalRService {
       return;
     }
 
-    const token = useAuthStore.getState().token;
-    if (!token) return;
-
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(HUB_URL, {
-        accessTokenFactory: () => token,
+        accessTokenFactory: () => useAuthStore.getState().token || "",
       })
       .withAutomaticReconnect()
       .build();
@@ -35,7 +34,11 @@ class SignalRService {
 
     this.connection.on('Error', (message: string) => {
       console.error('Backend Error:', message);
-      // You could also trigger a toast here if you import toast
+      if (message.toLowerCase().includes('guest limit reached')) {
+        useAppStore.getState().setGuestLimitModalOpen(true);
+      } else {
+        toast.error(message);
+      }
       useChatStore.getState().setTyping(false);
     });
 
@@ -86,6 +89,22 @@ class SignalRService {
     }
 
     await this.connection.invoke('SendMessage', conversationId, content);
+  }
+
+  public async sendGuestMessage(guestId: string, content: string) {
+    if (!this.connection) {
+      await this.startConnection();
+    }
+    
+    if (this.connection?.state === signalR.HubConnectionState.Connecting) {
+      await this.startPromise;
+    }
+
+    if (this.connection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR connection not established');
+    }
+
+    await this.connection.invoke('SendGuestMessage', guestId, content);
   }
 }
 

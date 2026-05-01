@@ -4,7 +4,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles, MessageSquare, Code, Lightbulb } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function MessageList() {
   const { messages, isTyping } = useChatStore();
@@ -19,14 +20,47 @@ export function MessageList() {
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-          <Bot className="w-8 h-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-semibold mb-2">How can I help you today?</h2>
-        <p className="text-muted-foreground max-w-md">
-          I'm an AI assistant. You can ask me questions, have me explain concepts, or help you write code.
-        </p>
+      <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-6"
+        >
+          <div className="relative inline-block">
+            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-2 mx-auto rotate-3 hover:rotate-0 transition-transform duration-300">
+              <Bot className="w-10 h-10 text-primary" />
+            </div>
+            <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-yellow-500 animate-pulse" />
+          </div>
+          
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to BroChat</h2>
+            <p className="text-muted-foreground text-lg">
+              Your intelligent companion for everything from coding to brainstorming.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+            {[
+              { icon: MessageSquare, title: "Explain anything", desc: "Complex topics made simple" },
+              { icon: Code, title: "Write & Debug", desc: "Instant code help and reviews" },
+              { icon: Lightbulb, title: "Brainstorm", desc: "Ideas for your next project" },
+              { icon: Sparkles, title: "And more...", desc: "Just ask and I'll help!" }
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + (i * 0.1) }}
+                className="p-4 rounded-xl border bg-card hover:shadow-md transition-shadow cursor-default"
+              >
+                <item.icon className="w-5 h-5 text-primary mb-2" />
+                <h3 className="font-medium text-sm">{item.title}</h3>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -34,55 +68,64 @@ export function MessageList() {
   return (
     <ScrollArea className="h-full px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6 pb-20">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              "flex gap-4 w-full",
-              msg.role === 'user' ? "flex-row-reverse" : "flex-row"
-            )}
-          >
-            <Avatar className={cn(
-              "w-8 h-8 flex-shrink-0 border-none",
-              msg.role === 'user' ? "bg-primary" : "bg-muted"
-            )}>
-              {msg.role === 'user' ? (
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold border-none">
-                  {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                </AvatarFallback>
-              ) : (
-                <AvatarFallback className="bg-muted text-muted-foreground border-none">
-                  <Bot className="w-4 h-4" />
-                </AvatarFallback>
-              )}
-            </Avatar>
-            
-            <div
+        <AnimatePresence initial={false}>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className={cn(
-                "px-4 py-3 rounded-2xl max-w-[85%] text-sm",
-                msg.role === 'user' 
-                  ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                  : "bg-muted/50 rounded-tl-sm"
+                "flex gap-4 w-full",
+                msg.role === 'user' ? "flex-row-reverse" : "flex-row"
               )}
             >
-              <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
-            </div>
-          </div>
-        ))}
+              <Avatar className={cn(
+                "w-9 h-9 flex-shrink-0 border-none shadow-sm mt-1",
+                msg.role === 'user' ? "bg-primary" : "bg-muted shadow-inner"
+              )}>
+                {msg.role === 'user' ? (
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold border-none">
+                    {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                ) : (
+                  <AvatarFallback className="bg-muted text-muted-foreground border-none">
+                    <Bot className="w-5 h-5" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              
+              <div
+                className={cn(
+                  "px-4 py-3 rounded-2xl max-w-[85%] text-sm shadow-sm transition-all duration-200",
+                  msg.role === 'user' 
+                    ? "bg-primary text-primary-foreground rounded-tr-sm hover:shadow-md" 
+                    : "bg-card border rounded-tl-sm hover:shadow-md"
+                )}
+              >
+                <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
         
         {isTyping && (
-          <div className="flex gap-4 w-full flex-row">
-            <Avatar className="w-8 h-8 flex-shrink-0 border bg-muted">
-              <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+          <motion.div 
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-4 w-full flex-row"
+          >
+            <Avatar className="w-9 h-9 flex-shrink-0 border bg-muted shadow-inner">
+              <AvatarFallback><Bot className="w-5 h-5" /></AvatarFallback>
             </Avatar>
-            <div className="px-4 py-3 rounded-2xl bg-muted/50 rounded-tl-sm flex items-center gap-1 h-[44px]">
-              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce"></div>
+            <div className="px-5 py-4 rounded-2xl bg-card border rounded-tl-sm flex items-center gap-1.5 h-[48px] shadow-sm">
+              <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce"></span>
             </div>
-          </div>
+          </motion.div>
         )}
-        <div ref={scrollRef} />
+        <div ref={scrollRef} className="h-4" />
       </div>
     </ScrollArea>
   );

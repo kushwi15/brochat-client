@@ -3,13 +3,14 @@ import { useParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { MessageList } from '../../components/chat/MessageList';
 import { MessageInput } from '../../components/chat/MessageInput';
+import { Preloader } from '../../components/ui/Preloader';
 
 import { chatApi } from '../../services/api';
 import type { Message } from '../../store/useChatStore';
 
 export default function ChatPage() {
   const { conversationId } = useParams();
-  const { setActiveConversation, setMessages } = useChatStore();
+  const { setActiveConversation, setMessages, isLoading, setLoading } = useChatStore();
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -19,6 +20,7 @@ export default function ChatPage() {
         return;
       }
 
+      setLoading(true);
       setActiveConversation(conversationId);
       try {
         const response = await chatApi.getMessages(conversationId);
@@ -31,16 +33,19 @@ export default function ChatPage() {
         setMessages(mappedMessages);
       } catch (error) {
         console.error('Failed to fetch messages:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchMessages();
-  }, [conversationId, setActiveConversation, setMessages]);
+  }, [conversationId, setActiveConversation, setMessages, setLoading]);
 
   return (
     <div className="flex flex-col h-full bg-background relative">
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden relative">
+        {isLoading && <Preloader />}
         <MessageList />
       </div>
 

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/chat/Sidebar';
+import { GuestLimitModal } from '../components/chat/GuestLimitModal';
 import { useAppStore } from '../store/useAppStore';
 import { useEffect } from 'react';
 import { signalRService } from '../services/signalrService';
@@ -51,6 +52,7 @@ export default function ChatLayout() {
           <Outlet />
         </main>
       </div>
+      <GuestLimitModal />
     </div>
   );
 }
