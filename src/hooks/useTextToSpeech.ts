@@ -14,22 +14,38 @@ export const useTextToSpeech = () => {
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) return;
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
     
-    // Optional: Choose a nicer voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Female')) || voices[0];
-    if (preferredVoice) utterance.voice = preferredVoice;
+    const doSpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // JARVIS style: Sophisticated British Male
+      const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) || 
+                             voices.find(v => v.name.includes('UK English')) ||
+                             voices.find(v => v.name.includes('George')) ||
+                             voices.find(v => v.name.includes('Hazel')) ||
+                             voices[0];
+      
+      if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.pitch = 1.1; // Refined AI tone
+      utterance.rate = 1.1;  // Efficient AI rate
 
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+
+      utterance.onstart = () => setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = doSpeak;
+    } else {
+      doSpeak();
+    }
   }, []);
+
 
   useEffect(() => {
     return () => {

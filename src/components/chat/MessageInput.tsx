@@ -16,13 +16,11 @@ export function MessageInput() {
     setIsVoiceMode
   } = useChatStore();
 
-  
   const { sendMessage } = useSendMessage();
-  const [isRecording, setIsRecording] = useState(false);
   const [isAutoSending, setIsAutoSending] = useState(false);
   const autoSendTimerRef = useRef<number | null>(null);
 
-  const handleSend = async () => {
+  const handleSend = async (overrideText?: string) => {
     // 1. Clear any pending auto-send timers
     if (autoSendTimerRef.current) {
       window.clearTimeout(autoSendTimerRef.current);
@@ -30,20 +28,35 @@ export function MessageInput() {
     }
     setIsAutoSending(false);
 
-    // 2. IMPORTANT: If we are still listening, stop it first 
-    // to ensure the final transcript is captured and processed
+    // 2. Stop listening if active
     if (isListening) {
       stopListening();
     }
 
-    // 3. Send the message
-    if (inputText.trim()) {
-      await sendMessage();
+    // 3. Use the latest transcript if provided, otherwise fall back to store text
+    const textToSend = overrideText || inputText;
+
+    if (textToSend.trim()) {
+      // 4. Small delay to ensure the browser has released the mic and settled the state
+      setTimeout(async () => {
+        await sendMessage(textToSend);
+        setInputText(''); // Explicitly clear the input after sending the voice prompt
+      }, 200);
     }
+  };
+
+  // Wrapper for manual button clicks to satisfy MouseEventHandler type
+  const handleManualSend = () => {
+    handleSend();
   };
 
   const { isListening, supported, startListening, stopListening } = useSpeechRecognition({
     onResult: (transcript) => {
+      // 1. Prevent the mic from capturing the AI's own voice
+      if (isTyping || (window.speechSynthesis && window.speechSynthesis.speaking)) {
+        return;
+      }
+
       setInputText(transcript);
       
       // Reset timer on every new word/result
@@ -51,13 +64,28 @@ export function MessageInput() {
       
       setIsAutoSending(true);
       autoSendTimerRef.current = window.setTimeout(() => {
-        handleSend();
+        handleSend(transcript);
       }, 2000);
     },
     onEnd: () => {
-      setIsRecording(false);
     }
   });
+
+  // Auto-restart microphone ONLY when AI is totally silent and finished typing
+  useEffect(() => {
+    const checkAndRestart = () => {
+      const isAiSpeaking = window.speechSynthesis && window.speechSynthesis.speaking;
+      
+      if (isVoiceMode && !isTyping && !isListening && !isAutoSending && !isAiSpeaking) {
+        startListening();
+      }
+    };
+
+    // Poll slightly to ensure we catch the end of speech synthesis
+    const interval = setInterval(checkAndRestart, 500);
+    return () => clearInterval(interval);
+  }, [isTyping, isVoiceMode, isListening, isAutoSending, startListening]);
+
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -66,10 +94,10 @@ export function MessageInput() {
     };
   }, []);
 
+
   const toggleRecording = () => {
     if (isListening) {
       stopListening();
-      setIsRecording(false);
       setIsVoiceMode(false);
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       if (autoSendTimerRef.current) {
@@ -79,10 +107,10 @@ export function MessageInput() {
       setIsAutoSending(false);
     } else {
       startListening();
-      setIsRecording(true);
       setIsVoiceMode(true);
     }
   };
+
 
 
 
@@ -149,10 +177,11 @@ export function MessageInput() {
               variant="default" 
               className="w-10 h-10 rounded-full"
               disabled={!inputText.trim() && !isListening}
-              onClick={handleSend}
+              onClick={handleManualSend}
             >
               <Send className="w-4 h-4" />
             </Button>
+
           )}
         </div>
       </div>
