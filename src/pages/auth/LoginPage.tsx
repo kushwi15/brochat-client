@@ -161,12 +161,8 @@ export default function LoginPage() {
                 <GoogleLogin
                   onSuccess={onGoogleSuccess}
                   onError={() => toast.error('Google login failed')}
-                  useOneTap
-                  theme="outline"
-                  size="large"
-                  shape="pill"
-                  width="100%"
                 />
+
               </div>
 
               <Button variant="ghost" className="w-full h-11 text-muted-foreground hover:text-foreground" onClick={handleGuestLogin}>
