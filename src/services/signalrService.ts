@@ -29,8 +29,43 @@ class SignalRService {
 
     this.connection.on('MessageComplete', (messageId: string) => {
       console.log('Streaming complete for message:', messageId);
-      useChatStore.getState().setTyping(false);
+      const state = useChatStore.getState();
+      state.setTyping(false);
+      
+      // If voice response is enabled, speak the message
+      if (state.isVoiceMode) {
+        const message = state.messages.find(m => m.id === messageId);
+        if (message && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(message.content);
+          
+          const speakWithMessage = () => {
+             const voices = window.speechSynthesis.getVoices();
+             // JARVIS style: Sophisticated British Male
+             const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) || 
+                                    voices.find(v => v.name.includes('UK English')) ||
+                                    voices.find(v => v.name.includes('George')) ||
+                                    voices.find(v => v.name.includes('Hazel')) || // Sometimes Hazel sounds more "AI"
+                                    voices[0];
+             
+             if (preferredVoice) utterance.voice = preferredVoice;
+             utterance.pitch = 1.1; // Slightly higher for that refined AI tone
+             utterance.rate = 1.1;  // Slightly faster for Jarvis-like efficiency
+             window.speechSynthesis.speak(utterance);
+          };
+
+
+          if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = speakWithMessage;
+          } else {
+            speakWithMessage();
+          }
+        }
+      }
     });
+
+
+
 
     this.connection.on('Error', (message: string) => {
       console.error('Backend Error:', message);

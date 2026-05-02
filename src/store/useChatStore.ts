@@ -30,7 +30,10 @@ interface ChatState {
   clearChat: () => void;
   inputText: string;
   setInputText: (text: string) => void;
+  isVoiceMode: boolean;
+  setIsVoiceMode: (isVoiceMode: boolean) => void;
 }
+
 
 export const useChatStore = create<ChatState>((set) => ({
   conversations: [],
@@ -39,7 +42,10 @@ export const useChatStore = create<ChatState>((set) => ({
   isTyping: false,
   isLoading: false,
   inputText: '',
+  isVoiceMode: false,
+  setIsVoiceMode: (isVoiceMode) => set({ isVoiceMode }),
   setConversations: (conversations) => set({ conversations }),
+
   setActiveConversation: (id) => set({ activeConversationId: id }),
   setMessages: (messages) => set({ messages }),
   setLoading: (isLoading) => set({ isLoading }),
