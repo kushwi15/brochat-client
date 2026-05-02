@@ -20,6 +20,17 @@ export default function ChatPage() {
         return;
       }
 
+      // Read the fresh flag directly from the store (not from deps) to avoid
+      // the re-run loop: setting it to null would trigger this effect again.
+      const { freshConversationId, setFreshConversationId } = useChatStore.getState();
+      if (freshConversationId === conversationId) {
+        // This conversation was just created — messages are already in the store.
+        // Skip the backend fetch so we don't wipe the optimistic user message.
+        setFreshConversationId(null);
+        setActiveConversation(conversationId);
+        return;
+      }
+
       setLoading(true);
       setActiveConversation(conversationId);
       try {
@@ -39,7 +50,12 @@ export default function ChatPage() {
     };
 
     fetchMessages();
+  // freshConversationId intentionally NOT in deps — we read it via getState()
+  // to prevent re-running when it is cleared inside this same effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, setActiveConversation, setMessages, setLoading]);
+
+
 
   return (
     <div className="flex flex-col h-full bg-background relative">
