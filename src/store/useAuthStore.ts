@@ -9,6 +9,8 @@ interface AuthState {
   setAuth: (token: string, user: any) => void;
   logout: () => void;
   initializeGuest: () => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,9 +27,14 @@ export const useAuthStore = create<AuthState>()(
           set({ guestId: crypto.randomUUID() });
         }
       },
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'auth-storage',
+      onRehydrateStorage: (state) => {
+        return () => state.setHasHydrated(true);
+      },
     }
   )
 );

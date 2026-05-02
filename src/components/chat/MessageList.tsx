@@ -42,7 +42,7 @@ export function MessageList() {
           </div>
           
           <div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to BroChat</h2>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome Back BRO!</h2>
             <p className="text-muted-foreground text-lg">
               Your intelligent companion for everything from coding to brainstorming.
             </p>
