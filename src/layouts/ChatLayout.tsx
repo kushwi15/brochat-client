@@ -34,7 +34,7 @@ export default function ChatLayout() {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out bg-background",
           sidebarOpen 
             ? "translate-x-0 w-72 lg:relative" 
             : "-translate-x-full lg:translate-x-0 lg:w-0 overflow-hidden"
@@ -42,6 +42,7 @@ export default function ChatLayout() {
       >
         <Sidebar />
       </div>
+
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 w-full min-w-0 bg-background relative">

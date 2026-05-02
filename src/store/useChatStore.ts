@@ -19,7 +19,7 @@ interface ChatState {
   messages: Message[];
   isTyping: boolean;
   isLoading: boolean;
-  setConversations: (conversations: Conversation[]) => void;
+  setConversations: (conversations: Conversation[] | ((prev: Conversation[]) => Conversation[])) => void;
   setActiveConversation: (id: string | null) => void;
   setMessages: (messages: Message[]) => void;
   setLoading: (isLoading: boolean) => void;
@@ -32,6 +32,10 @@ interface ChatState {
   setInputText: (text: string) => void;
   isVoiceMode: boolean;
   setIsVoiceMode: (isVoiceMode: boolean) => void;
+  // Tracks a brand-new conversation so ChatPage skips the backend fetch
+  // (avoids wiping the optimistic user message before AI responds)
+  freshConversationId: string | null;
+  setFreshConversationId: (id: string | null) => void;
 }
 
 
@@ -43,8 +47,13 @@ export const useChatStore = create<ChatState>((set) => ({
   isLoading: false,
   inputText: '',
   isVoiceMode: false,
+  freshConversationId: null,
   setIsVoiceMode: (isVoiceMode) => set({ isVoiceMode }),
-  setConversations: (conversations) => set({ conversations }),
+  setFreshConversationId: (id) => set({ freshConversationId: id }),
+  setConversations: (update) => 
+    set((state) => ({ 
+      conversations: typeof update === 'function' ? update(state.conversations) : update 
+    })),
 
   setActiveConversation: (id) => set({ activeConversationId: id }),
   setMessages: (messages) => set({ messages }),

@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
 import { Bot, Sparkles, MessageSquare, Code, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useSendMessage } from '../../hooks/useSendMessage';
 
 export function MessageList() {
@@ -111,7 +112,40 @@ export function MessageList() {
                     : "bg-card border rounded-tl-sm hover:shadow-md"
                 )}
               >
-                <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                {msg.role === 'user' ? (
+                  <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                ) : (
+                  <div className="leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="text-lg font-bold mt-3 mb-1">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-1">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 text-primary">{children}</h3>,
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li className="text-sm">{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
+                        code: ({ children, className }) => {
+                          const isBlock = className?.includes('language-');
+                          return isBlock ? (
+                            <code className="block bg-muted text-primary font-mono text-xs p-3 rounded-lg my-2 overflow-x-auto">{children}</code>
+                          ) : (
+                            <code className="bg-muted text-primary font-mono text-xs px-1.5 py-0.5 rounded">{children}</code>
+                          );
+                        },
+                        pre: ({ children }) => <pre className="bg-muted rounded-lg my-2 overflow-x-auto">{children}</pre>,
+                        blockquote: ({ children }) => <blockquote className="border-l-2 border-primary pl-3 my-2 text-muted-foreground italic">{children}</blockquote>,
+                        hr: () => <hr className="my-3 border-border" />,
+                        a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80">{children}</a>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
