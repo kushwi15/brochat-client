@@ -22,6 +22,12 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const callbacksRef = useRef({ onResult, onError, onEnd });
+
+  // Update callbacks ref so handlers always have the latest version
+  useEffect(() => {
+    callbacksRef.current = { onResult, onError, onEnd };
+  }, [onResult, onError, onEnd]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -38,22 +44,22 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
           .map((result: any) => result.transcript)
           .join('');
 
-        if (onResult) {
-          onResult(transcript);
+        if (callbacksRef.current.onResult) {
+          callbacksRef.current.onResult(transcript);
         }
       };
 
       recognition.onerror = (event: any) => {
         setIsListening(false);
-        if (onError) {
-          onError(event);
+        if (callbacksRef.current.onError) {
+          callbacksRef.current.onError(event);
         }
       };
 
       recognition.onend = () => {
         setIsListening(false);
-        if (onEnd) {
-          onEnd();
+        if (callbacksRef.current.onEnd) {
+          callbacksRef.current.onEnd();
         }
       };
 

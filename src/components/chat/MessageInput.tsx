@@ -3,6 +3,7 @@ import { Button } from '../ui/button';
 import { useChatStore } from '../../store/useChatStore';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { signalRService } from '../../services/signalrService';
 import { cn } from '../../lib/utils';
 import { useState, useRef, useEffect } from 'react';
 
@@ -165,8 +166,11 @@ export function MessageInput() {
             <Button 
               size="icon" 
               variant="default" 
-              className="w-10 h-10 rounded-full bg-primary"
-              onClick={() => setTyping(false)} // Mock stop generation
+              className="w-10 h-10 rounded-full bg-destructive hover:bg-destructive/90"
+              onClick={async () => {
+                await signalRService.cancelGeneration();
+                setTyping(false);
+              }}
               title="Stop generating"
             >
               <Square className="w-4 h-4 fill-current" />

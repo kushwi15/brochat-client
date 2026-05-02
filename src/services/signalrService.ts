@@ -141,6 +141,15 @@ class SignalRService {
 
     await this.connection.invoke('SendGuestMessage', guestId, content);
   }
+  public async cancelGeneration() {
+    if (this.connection?.state === signalR.HubConnectionState.Connected) {
+      try {
+        await this.connection.invoke('CancelGeneration');
+      } catch (err) {
+        console.error('Error cancelling generation:', err);
+      }
+    }
+  }
 }
 
 export const signalRService = new SignalRService();

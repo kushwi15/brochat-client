@@ -67,7 +67,8 @@ export default function LoginPage() {
       toast.success('Logged in with Google');
       navigate('/');
     } catch (error: any) {
-      toast.error('Google authentication failed');
+      const message = error.response?.data?.message || 'Google authentication failed';
+      toast.error(message);
     }
   };
 

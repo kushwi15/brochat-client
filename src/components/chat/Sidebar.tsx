@@ -13,6 +13,14 @@ import { chatApi } from '../../services/api';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '../ui/input';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '../ui/dialog';
 
 export function Sidebar() {
   const { conversations, activeConversationId, setActiveConversation, setConversations, deleteConversation, clearChat } = useChatStore();
@@ -21,6 +29,8 @@ export function Sidebar() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -58,21 +68,29 @@ export function Sidebar() {
 
   const handleDeleteChat = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this chat?')) {
-      try {
-        await chatApi.deleteConversation(id);
-        deleteConversation(id);
-        if (activeConversationId === id) {
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Failed to delete conversation:', error);
+    setConversationToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!conversationToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await chatApi.deleteConversation(conversationToDelete);
+      deleteConversation(conversationToDelete);
+      if (activeConversationId === conversationToDelete) {
+        navigate('/');
       }
+      setConversationToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-card/30 backdrop-blur-xl border-r shadow-xl z-20">
+    <div className="flex flex-col h-full bg-background lg:bg-card/40 backdrop-blur-xl border-r shadow-2xl z-20">
       {isAuthenticated && (
         <div className="p-4 flex flex-col gap-4">
           <div className="flex items-center justify-between px-1">
@@ -141,8 +159,8 @@ export function Sidebar() {
         </div>
       )}
 
-      <ScrollArea className="flex-1 px-2">
-        <div className="space-y-1.5 p-2">
+      <ScrollArea className="flex-1 px-2 overflow-hidden">
+        <div className="space-y-1.5 p-2 overflow-hidden">
           {filteredConversations.length === 0 && searchQuery && (
             <div className="text-center py-8 text-muted-foreground text-xs italic">
               No conversations found for "{searchQuery}"
@@ -151,34 +169,35 @@ export function Sidebar() {
           {filteredConversations.map((conv) => (
             <motion.div 
               key={conv.id} 
-              className="group relative"
+              className="group flex items-center gap-1 w-full max-w-full overflow-hidden"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <Button
-                variant={activeConversationId === conv.id ? 'secondary' : 'ghost'}
+              {/* Chat button — flex-1 + min-w-0 clips overflowing title */}
+              <button
                 className={cn(
-                  "w-full justify-start text-left font-normal truncate pr-10 h-11 rounded-xl transition-all duration-200",
+                  "flex items-center gap-2 flex-1 min-w-0 w-0 h-11 px-3 rounded-xl text-sm font-normal text-left transition-all duration-200 overflow-hidden",
                   activeConversationId === conv.id 
                     ? "bg-primary/10 text-primary font-semibold shadow-inner" 
-                    : "hover:bg-muted/50"
+                    : "hover:bg-muted/50 text-foreground"
                 )}
                 onClick={() => handleSelectChat(conv.id)}
               >
                 <MessageSquare className={cn(
-                  "w-4 h-4 mr-2 shrink-0 transition-colors",
+                  "w-4 h-4 shrink-0",
                   activeConversationId === conv.id ? "text-primary" : "text-muted-foreground"
                 )} />
                 <span className="truncate">{conv.title}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+              </button>
+
+              {/* Delete icon — shrink-0 keeps it always visible on the right */}
+              <button
+                className="shrink-0 flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
                 onClick={(e) => handleDeleteChat(conv.id, e)}
+                title="Delete chat"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             </motion.div>
           ))}
         </div>
@@ -233,6 +252,25 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={!!conversationToDelete} onOpenChange={(open) => !open && setConversationToDelete(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Chat?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete this conversation and all its messages. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setConversationToDelete(null)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete Chat'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
