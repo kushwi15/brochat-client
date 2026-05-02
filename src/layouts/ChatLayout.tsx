@@ -32,16 +32,18 @@ export default function ChatLayout() {
       )}
 
       {/* Sidebar */}
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out bg-background",
-          sidebarOpen 
-            ? "translate-x-0 w-72 lg:relative" 
-            : "-translate-x-full lg:translate-x-0 lg:w-0 overflow-hidden"
-        )}
-      >
-        <Sidebar />
-      </div>
+      {isAuthenticated && (
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out bg-background",
+            sidebarOpen 
+              ? "translate-x-0 w-72 lg:relative" 
+              : "-translate-x-full lg:translate-x-0 lg:w-0 overflow-hidden"
+          )}
+        >
+          <Sidebar />
+        </div>
+      )}
 
 
       {/* Main Content */}
@@ -66,11 +68,31 @@ export default function ChatLayout() {
 
         {/* Mobile Header */}
         <div className="flex items-center h-14 px-4 border-b lg:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-5 h-5" />
-          </Button>
-          <span className="ml-4 font-semibold">BroChat</span>
+          {isAuthenticated && (
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          <span className={cn("font-semibold", isAuthenticated ? "ml-4" : "mx-auto")}>BroChat</span>
         </div>
+
+        {/* Guest Mode Banner */}
+        {!isAuthenticated && (
+          <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between z-30">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Guest Mode</span>
+              <span className="hidden sm:inline text-xs text-muted-foreground ml-2">— Sign in to save your chat history and unlock all features.</span>
+            </div>
+            <Button 
+              size="sm" 
+              className="h-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4"
+              onClick={() => window.location.href = '/login'}
+            >
+              Sign In
+            </Button>
+          </div>
+        )}
 
         <main className="flex-1 overflow-hidden relative">
           <Outlet />

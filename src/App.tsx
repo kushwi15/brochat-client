@@ -3,16 +3,18 @@ import { AppRoutes } from './routes/AppRoutes';
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { useEffect } from 'react';
+import { Preloader } from './components/ui/Preloader';
 import { Toaster } from './components/ui/sonner';
 
 function App() {
   const theme = useAppStore((state) => state.theme);
-  const { initializeGuest, isAuthenticated } = useAuthStore();
+  const { initializeGuest, isAuthenticated, _hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (_hasHydrated && !isAuthenticated) {
       initializeGuest();
     }
+    
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -25,7 +27,11 @@ function App() {
     }
 
     root.classList.add(theme);
-  }, [theme]);
+  }, [theme, _hasHydrated, isAuthenticated]);
+
+  if (!_hasHydrated) {
+    return <Preloader />;
+  }
 
   return (
     <BrowserRouter>

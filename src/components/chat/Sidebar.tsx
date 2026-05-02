@@ -1,4 +1,4 @@
-import { Plus, MessageSquare, LogOut, Trash2, Shield, PanelLeft, Search, X } from 'lucide-react';
+import { Plus, MessageSquare, LogOut, Trash2, PanelLeft, Search, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { useChatStore } from '../../store/useChatStore';
@@ -13,13 +13,13 @@ import { chatApi } from '../../services/api';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '../ui/input';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '../ui/dialog';
 
 export function Sidebar() {
@@ -46,7 +46,7 @@ export function Sidebar() {
     fetchConversations();
   }, [isAuthenticated, setConversations]);
 
-  const filteredConversations = conversations.filter(conv => 
+  const filteredConversations = conversations.filter(conv =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -73,7 +73,7 @@ export function Sidebar() {
 
   const confirmDelete = async () => {
     if (!conversationToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await chatApi.deleteConversation(conversationToDelete);
@@ -94,18 +94,18 @@ export function Sidebar() {
       {isAuthenticated && (
         <div className="p-4 flex flex-col gap-4">
           <div className="flex items-center justify-between px-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-9 w-9 text-muted-foreground hover:text-primary transition-colors"
               onClick={() => setSidebarOpen(false)}
               title="Close Sidebar"
             >
               <PanelLeft className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className={cn(
                 "h-9 w-9 transition-colors",
                 isSearchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
@@ -148,9 +148,9 @@ export function Sidebar() {
             )}
           </AnimatePresence>
 
-          <Button 
-            onClick={handleNewChat} 
-            className="w-full justify-start gap-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/10 shadow-sm transition-all duration-200" 
+          <Button
+            onClick={handleNewChat}
+            className="w-full justify-start gap-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/10 shadow-sm transition-all duration-200"
             variant="outline"
           >
             <Plus className="w-4 h-4" />
@@ -167,8 +167,8 @@ export function Sidebar() {
             </div>
           )}
           {filteredConversations.map((conv) => (
-            <motion.div 
-              key={conv.id} 
+            <motion.div
+              key={conv.id}
               className="group flex items-center gap-1 w-full max-w-full overflow-hidden"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -177,8 +177,8 @@ export function Sidebar() {
               <button
                 className={cn(
                   "flex items-center gap-2 flex-1 min-w-0 w-0 h-11 px-3 rounded-xl text-sm font-normal text-left transition-all duration-200 overflow-hidden",
-                  activeConversationId === conv.id 
-                    ? "bg-primary/10 text-primary font-semibold shadow-inner" 
+                  activeConversationId === conv.id
+                    ? "bg-primary/10 text-primary font-semibold shadow-inner"
                     : "hover:bg-muted/50 text-foreground"
                 )}
                 onClick={() => handleSelectChat(conv.id)}
@@ -204,51 +204,31 @@ export function Sidebar() {
       </ScrollArea>
 
       <div className="p-4 border-t border-border/50 mt-auto flex flex-col gap-3 bg-muted/20">
-        {!isAuthenticated ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-1 shadow-sm"
-          >
-            <div className="flex items-center gap-2 text-primary mb-2">
-              <Shield className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest">Guest Mode</span>
+        <div className="flex items-center justify-between mb-1 px-1">
+          <div className="flex items-center gap-3 truncate">
+            <Avatar className="w-9 h-9 border-2 border-primary/10">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col truncate">
+              <span className="text-sm font-bold truncate leading-none mb-1">
+                {user?.name || user?.email?.split('@')[0] || 'User'}
+              </span>
+              <span className="text-[11px] text-muted-foreground truncate leading-none">{user?.email}</span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              Sign in to save your chat history and unlock unlimited messages.
-            </p>
-          </motion.div>
-        ) : (
-          <div className="flex items-center justify-between mb-1 px-1">
-            <div className="flex items-center gap-3 truncate">
-              <Avatar className="w-9 h-9 border-2 border-primary/10">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                  {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col truncate">
-                <span className="text-sm font-bold truncate leading-none mb-1">
-                  {user?.name || user?.email?.split('@')[0] || 'User'}
-                </span>
-                <span className="text-[11px] text-muted-foreground truncate leading-none">{user?.email}</span>
-              </div>
-            </div>
-            <ThemeToggle />
           </div>
-        )}
-        
+          <ThemeToggle />
+        </div>
+
         <div className="flex items-center gap-2 px-1">
-          {!isAuthenticated && <ThemeToggle />}
-          <Button 
-            variant="ghost" 
-            className={cn(
-              "flex-1 justify-start h-10 rounded-xl transition-colors",
-              isAuthenticated ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={isAuthenticated ? handleLogout : () => navigate('/login')}
+          <Button
+            variant="ghost"
+            className="flex-1 justify-start h-10 rounded-xl transition-colors text-destructive hover:bg-destructive/10"
+            onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
-            <span className="font-medium">{isAuthenticated ? 'Log out' : 'Sign in'}</span>
+            <span className="font-medium">Log out</span>
           </Button>
         </div>
       </div>
