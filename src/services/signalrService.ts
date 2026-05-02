@@ -29,8 +29,20 @@ class SignalRService {
 
     this.connection.on('MessageComplete', (messageId: string) => {
       console.log('Streaming complete for message:', messageId);
-      useChatStore.getState().setTyping(false);
+      const state = useChatStore.getState();
+      state.setTyping(false);
+      
+      // If voice response is enabled, speak the message
+      if (state.isVoiceMode) {
+        const message = state.messages.find(m => m.id === messageId);
+        if (message && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(message.content);
+          window.speechSynthesis.speak(utterance);
+        }
+      }
     });
+
 
     this.connection.on('Error', (message: string) => {
       console.error('Backend Error:', message);
