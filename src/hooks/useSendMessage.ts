@@ -11,7 +11,6 @@ export function useSendMessage() {
     addMessage, 
     isTyping, 
     setTyping, 
-    activeConversationId, 
     setActiveConversation, 
     setConversations, 
     conversations 
@@ -23,6 +22,9 @@ export function useSendMessage() {
   const sendMessage = async (content?: string) => {
     const textToSend = content || inputText;
     if (!textToSend.trim() || isTyping) return;
+
+    // Use the latest conversation ID from the store
+    let currentConvId = useChatStore.getState().activeConversationId;
 
     const userMessage = {
       id: Date.now().toString(),
@@ -37,17 +39,23 @@ export function useSendMessage() {
 
     try {
       if (isAuthenticated) {
-        let currentConvId = activeConversationId;
-
         if (!currentConvId) {
           const title = textToSend.trim().substring(0, 30) + (textToSend.trim().length > 30 ? '...' : '');
           const response = await chatApi.createConversation(title);
           const newConv = response.data;
           
           currentConvId = newConv.id;
+          
+          // Add to current list and set active
           setConversations([newConv, ...conversations]);
           setActiveConversation(currentConvId);
-          navigate(`/c/${currentConvId}`);
+          
+          // Push to the new route
+          navigate(`/c/${currentConvId}`, { replace: true });
+          
+          // Re-fetch to ensure sync
+          const convsRes = await chatApi.getConversations();
+          setConversations(convsRes.data);
         }
 
         if (!currentConvId) return;
@@ -66,3 +74,5 @@ export function useSendMessage() {
 
   return { sendMessage };
 }
+
+
