@@ -29,7 +29,7 @@ export function MessageList() {
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto px-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-6"
@@ -40,7 +40,7 @@ export function MessageList() {
             </div>
             <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-yellow-500 animate-pulse" />
           </div>
-          
+
           <div>
             <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome Back BRO!</h2>
             <p className="text-muted-foreground text-lg">
@@ -55,7 +55,7 @@ export function MessageList() {
               { icon: Lightbulb, title: "Brainstorm", desc: "Ideas for your next project", prompt: "Brainstorm 5 unique startup ideas for a sustainable lifestyle." },
               { icon: Sparkles, title: "And more...", desc: "Just ask and I'll help!", prompt: "What are some interesting things I can ask you?" }
             ].map((item, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -103,12 +103,12 @@ export function MessageList() {
                   </AvatarFallback>
                 )}
               </Avatar>
-              
+
               <div
                 className={cn(
                   "px-4 py-3 rounded-2xl max-w-[85%] text-sm shadow-sm transition-all duration-200",
-                  msg.role === 'user' 
-                    ? "bg-primary text-primary-foreground rounded-tr-sm hover:shadow-md" 
+                  msg.role === 'user'
+                    ? "bg-primary text-primary-foreground rounded-tr-sm hover:shadow-md"
                     : "bg-card border rounded-tl-sm hover:shadow-md"
                 )}
               >
@@ -150,9 +150,9 @@ export function MessageList() {
             </motion.div>
           ))}
         </AnimatePresence>
-        
+
         {isTyping && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex gap-4 w-full flex-row"
