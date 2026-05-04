@@ -150,6 +150,22 @@ class SignalRService {
       }
     }
   }
+
+  public async regenerateResponse(conversationId: string) {
+    if (!this.connection) {
+      await this.startConnection();
+    }
+    
+    if (this.connection?.state === signalR.HubConnectionState.Connecting) {
+      await this.startPromise;
+    }
+
+    if (this.connection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR connection not established');
+    }
+
+    await this.connection.invoke('RegenerateResponse', conversationId);
+  }
 }
 
 export const signalRService = new SignalRService();

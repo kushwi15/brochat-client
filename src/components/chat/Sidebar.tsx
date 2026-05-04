@@ -1,4 +1,4 @@
-import { Plus, MessageSquare, LogOut, Trash2, PanelLeft, Search, X } from 'lucide-react';
+import { Plus, MessageSquare, LogOut, Trash2, PanelLeft, Search, X, Pencil } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { useChatStore } from '../../store/useChatStore';
@@ -23,14 +23,17 @@ import {
 } from '../ui/dialog';
 
 export function Sidebar() {
-  const { conversations, activeConversationId, setActiveConversation, setConversations, deleteConversation, clearChat } = useChatStore();
+  const { conversations, activeConversationId, setActiveConversation, setConversations, deleteConversation, updateConversation, clearChat } = useChatStore();
   const { user, logout, isAuthenticated } = useAuthStore();
   const { setSidebarOpen } = useAppStore();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [conversationToRename, setConversationToRename] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -86,6 +89,27 @@ export function Sidebar() {
       console.error('Failed to delete conversation:', error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+  
+  const handleRenameClick = (id: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversationToRename(id);
+    setNewTitle(title);
+  };
+
+  const confirmRename = async () => {
+    if (!conversationToRename || !newTitle.trim()) return;
+
+    setIsRenaming(true);
+    try {
+      await chatApi.updateConversation(conversationToRename, newTitle);
+      updateConversation(conversationToRename, newTitle);
+      setConversationToRename(null);
+    } catch (error) {
+      console.error('Failed to rename conversation:', error);
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -190,14 +214,25 @@ export function Sidebar() {
                 <span className="truncate">{conv.title}</span>
               </button>
 
-              {/* Delete icon — shrink-0 keeps it always visible on the right */}
-              <button
-                className="shrink-0 flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
-                onClick={(e) => handleDeleteChat(conv.id, e)}
-                title="Delete chat"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="hidden group-hover:flex items-center shrink-0 transition-all">
+                {/* Rename icon */}
+                <button
+                  className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                  onClick={(e) => handleRenameClick(conv.id, conv.title, e)}
+                  title="Rename chat"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+
+                {/* Delete icon */}
+                <button
+                  className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                  onClick={(e) => handleDeleteChat(conv.id, e)}
+                  title="Delete chat"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -247,6 +282,34 @@ export function Sidebar() {
             </Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
               {isDeleting ? 'Deleting...' : 'Delete Chat'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!conversationToRename} onOpenChange={(open) => !open && setConversationToRename(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Rename Chat</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this conversation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Chat name"
+              onKeyDown={(e) => e.key === 'Enter' && confirmRename()}
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setConversationToRename(null)} disabled={isRenaming}>
+              Cancel
+            </Button>
+            <Button onClick={confirmRename} disabled={isRenaming || !newTitle.trim()}>
+              {isRenaming ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

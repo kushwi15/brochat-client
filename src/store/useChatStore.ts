@@ -25,8 +25,10 @@ interface ChatState {
   setLoading: (isLoading: boolean) => void;
   addMessage: (message: Message) => void;
   updateMessageStream: (id: string, content: string) => void;
+  updateMessage: (id: string, content: string) => void;
   setTyping: (isTyping: boolean) => void;
   deleteConversation: (id: string) => void;
+  updateConversation: (id: string, title: string) => void;
   clearChat: () => void;
   inputText: string;
   setInputText: (text: string) => void;
@@ -78,12 +80,24 @@ export const useChatStore = create<ChatState>((set) => ({
         ),
       };
     }),
+  updateMessage: (id, content) =>
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === id ? { ...m, content } : m
+      ),
+    })),
   setTyping: (isTyping: boolean) => set({ isTyping }),
   deleteConversation: (id) =>
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== id),
       activeConversationId: state.activeConversationId === id ? null : state.activeConversationId,
       messages: state.activeConversationId === id ? [] : state.messages,
+    })),
+  updateConversation: (id, title) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === id ? { ...c, title } : c
+      ),
     })),
   clearChat: () => set({ conversations: [], activeConversationId: null, messages: [], isTyping: false, isLoading: false, inputText: '' }),
 }));

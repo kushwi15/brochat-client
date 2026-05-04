@@ -1,26 +1,83 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/useChatStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
-import { Bot, Sparkles, MessageSquare, Code, Lightbulb } from 'lucide-react';
+import { Bot, Sparkles, MessageSquare, Code, Lightbulb, Pencil, Check, X, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSendMessage } from '../../hooks/useSendMessage';
+import { chatApi } from '../../services/api';
+import { signalRService } from '../../services/signalrService';
+import { useTextToSpeech } from '../../hooks/useTextToSpeech';
 
 export function MessageList() {
-  const { messages, isTyping } = useChatStore();
+  const { messages, isTyping, updateMessage, setTyping, setMessages, activeConversationId } = useChatStore();
   const { user } = useAuthStore();
   const { sendMessage } = useSendMessage();
+  const { speak, stop, isPlaying } = useTextToSpeech();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
+
+  const userMessages = messages.filter(m => m.role === 'user');
+  const lastUserMessageId = userMessages[userMessages.length - 1]?.id;
+
+  const handleEdit = (id: string, content: string) => {
+    setEditingId(id);
+    setEditValue(content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editValue.trim()) return;
+
+    try {
+      await chatApi.updateMessage(editingId, editValue);
+      updateMessage(editingId, editValue);
+      
+      // If editing the last message, trigger AI regeneration
+      if (editingId === lastUserMessageId && activeConversationId) {
+        setTyping(true);
+        // Optimistically remove the last AI message if it exists
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg && lastMsg.role === 'ai') {
+          setMessages(messages.slice(0, -1));
+        }
+        await signalRService.regenerateResponse(activeConversationId);
+      }
+      
+      setEditingId(null);
+    } catch (error) {
+      console.error('Failed to update message:', error);
+      setTyping(false);
+    }
+  };
+
+  const handleToggleSpeech = (id: string, content: string) => {
+    if (isPlaying && speakingMessageId === id) {
+      stop();
+      setSpeakingMessageId(null);
+    } else {
+      setSpeakingMessageId(id);
+      speak(content);
+    }
+  };
+
+  // Reset speaking state when TTS ends naturally
+  useEffect(() => {
+    if (!isPlaying) {
+      setSpeakingMessageId(null);
+    }
+  }, [isPlaying]);
 
   const handlePromptClick = (prompt: string) => {
     sendMessage(prompt);
@@ -113,7 +170,46 @@ export function MessageList() {
                 )}
               >
                 {msg.role === 'user' ? (
-                  <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                  <div className="group relative pr-6">
+                    {editingId === msg.id ? (
+                      <div className="flex flex-col gap-2 min-w-[200px]">
+                        <textarea
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="w-full bg-primary-foreground/10 border-none focus:ring-0 text-sm resize-none rounded p-1 outline-none min-h-[60px]"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSaveEdit();
+                            }
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => setEditingId(null)} className="p-1 hover:bg-primary-foreground/20 rounded">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={handleSaveEdit} className="p-1 hover:bg-primary-foreground/20 rounded">
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                        {msg.id === lastUserMessageId && !isTyping && (
+                          <button
+                            onClick={() => handleEdit(msg.id, msg.content)}
+                            className="absolute -right-1 top-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-foreground/20 rounded"
+                            title="Edit message"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 ) : (
                   <div className="leading-relaxed prose prose-sm max-w-none dark:prose-invert">
                     <ReactMarkdown
@@ -144,6 +240,26 @@ export function MessageList() {
                     >
                       {msg.content}
                     </ReactMarkdown>
+                  </div>
+                )}
+                {msg.role === 'ai' && !isTyping && (
+                  <div className="flex justify-start mt-2 pt-2 border-t border-border/50">
+                    <button
+                      onClick={() => handleToggleSpeech(msg.id, msg.content)}
+                      className={cn(
+                        "p-1.5 rounded-lg transition-all duration-200",
+                        isPlaying && speakingMessageId === msg.id
+                          ? "text-primary bg-primary/10"
+                          : "text-muted-foreground hover:text-primary hover:bg-muted"
+                      )}
+                      title={isPlaying && speakingMessageId === msg.id ? "Stop reading" : "Read message"}
+                    >
+                      {isPlaying && speakingMessageId === msg.id ? (
+                        <VolumeX className="w-3.5 h-3.5" />
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
