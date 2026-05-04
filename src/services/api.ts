@@ -82,4 +82,6 @@ export const chatApi = {
   createConversation: (title: string) => api.post('/chat/conversation', { title }),
   getMessages: (conversationId: string) => api.get(`/chat/${conversationId}/messages`),
   deleteConversation: (id: string) => api.delete(`/chat/${id}`),
+  updateConversation: (id: string, title: string) => api.patch(`/chat/${id}`, { title }),
+  updateMessage: (id: string, content: string) => api.patch(`/chat/message/${id}`, { content }),
 };
