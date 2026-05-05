@@ -16,16 +16,16 @@ export const useTextToSpeech = () => {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    
+
     const doSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
       // JARVIS style: Sophisticated British Male
-      const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) || 
-                             voices.find(v => v.name.includes('UK English')) ||
-                             voices.find(v => v.name.includes('George')) ||
-                             voices.find(v => v.name.includes('Hazel')) ||
-                             voices[0];
-      
+      const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) ||
+        voices.find(v => v.name.includes('UK English')) ||
+        voices.find(v => v.name.includes('George')) ||
+        voices.find(v => v.name.includes('Hazel')) ||
+        voices[0];
+
       if (preferredVoice) utterance.voice = preferredVoice;
       utterance.pitch = 1.1; // Refined AI tone
       utterance.rate = 1.1;  // Efficient AI rate

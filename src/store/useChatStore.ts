@@ -1,10 +1,18 @@
 import { create } from 'zustand';
 
+export interface FileAttachment {
+  url: string; // Local preview URL or Cloudinary URL
+  type: string;
+  name: string;
+  file?: File; // The raw file to be uploaded later
+}
+
 export interface Message {
   id: string;
   content: string;
   role: 'user' | 'ai';
   createdAt: string;
+  attachments?: FileAttachment[];
 }
 
 export interface Conversation {
@@ -38,6 +46,8 @@ interface ChatState {
   // (avoids wiping the optimistic user message before AI responds)
   freshConversationId: string | null;
   setFreshConversationId: (id: string | null) => void;
+  selectedFiles: FileAttachment[];
+  setSelectedFiles: (files: FileAttachment[] | ((prev: FileAttachment[]) => FileAttachment[])) => void;
 }
 
 
@@ -50,6 +60,11 @@ export const useChatStore = create<ChatState>((set) => ({
   inputText: '',
   isVoiceMode: false,
   freshConversationId: null,
+  selectedFiles: [],
+  setSelectedFiles: (update) => 
+    set((state) => ({ 
+      selectedFiles: typeof update === 'function' ? update(state.selectedFiles) : update 
+    })),
   setIsVoiceMode: (isVoiceMode) => set({ isVoiceMode }),
   setFreshConversationId: (id) => set({ freshConversationId: id }),
   setConversations: (update) => 
