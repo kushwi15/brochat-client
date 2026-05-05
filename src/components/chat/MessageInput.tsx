@@ -1,6 +1,7 @@
 import { Send, Square, Mic, MicOff, Loader2, Paperclip, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useChatStore } from '../../store/useChatStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { signalRService } from '../../services/signalrService';
@@ -20,6 +21,7 @@ export function MessageInput() {
     setSelectedFiles
   } = useChatStore();
 
+  const { isAuthenticated } = useAuthStore();
   const { sendMessage } = useSendMessage();
   const [isAutoSending, setIsAutoSending] = useState(false);
   const autoSendTimerRef = useRef<number | null>(null);
@@ -205,15 +207,17 @@ export function MessageInput() {
           className="hidden" 
           accept="image/*,application/pdf"
         />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="w-10 h-10 rounded-full text-muted-foreground hover:bg-muted shrink-0 mb-0.5"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isTyping}
-        >
-          <Paperclip className="w-4 h-4" />
-        </Button>
+        {isAuthenticated && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-10 h-10 rounded-full text-muted-foreground hover:bg-muted shrink-0 mb-0.5"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isTyping}
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+        )}
         <textarea
           value={inputText}
           onChange={(e) => {
