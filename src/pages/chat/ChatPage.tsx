@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { MessageList } from '../../components/chat/MessageList';
 import { MessageInput } from '../../components/chat/MessageInput';
 import { Preloader } from '../../components/ui/Preloader';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
 import { chatApi } from '../../services/api';
 import type { Message } from '../../store/useChatStore';
@@ -14,7 +14,6 @@ export default function ChatPage() {
   const { conversationId } = useParams();
   const { setActiveConversation, setMessages, isLoading, setLoading, setSelectedFiles } = useChatStore();
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const dragCounter = useRef(0);
 
   useEffect(() => {
@@ -132,12 +131,7 @@ export default function ChatPage() {
         </div>
       )}
 
-      {isUploading && (
-        <div className="absolute inset-0 z-[60] bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <span className="font-medium">Uploading to Cloudinary...</span>
-        </div>
-      )}
+
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden relative">
