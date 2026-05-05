@@ -31,27 +31,27 @@ class SignalRService {
       console.log('Streaming complete for message:', messageId);
       const state = useChatStore.getState();
       state.setTyping(false);
-      
+
       // If voice response is enabled, speak the message
       if (state.isVoiceMode) {
         const message = state.messages.find(m => m.id === messageId);
         if (message && window.speechSynthesis) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(message.content);
-          
+
           const speakWithMessage = () => {
-             const voices = window.speechSynthesis.getVoices();
-             // JARVIS style: Sophisticated British Male
-             const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) || 
-                                    voices.find(v => v.name.includes('UK English')) ||
-                                    voices.find(v => v.name.includes('George')) ||
-                                    voices.find(v => v.name.includes('Hazel')) || // Sometimes Hazel sounds more "AI"
-                                    voices[0];
-             
-             if (preferredVoice) utterance.voice = preferredVoice;
-             utterance.pitch = 1.1; // Slightly higher for that refined AI tone
-             utterance.rate = 1.1;  // Slightly faster for Jarvis-like efficiency
-             window.speechSynthesis.speak(utterance);
+            const voices = window.speechSynthesis.getVoices();
+            // JARVIS style: Sophisticated British Male
+            const preferredVoice = voices.find(v => v.name.includes('Google UK English Male')) ||
+              voices.find(v => v.name.includes('UK English')) ||
+              voices.find(v => v.name.includes('George')) ||
+              voices.find(v => v.name.includes('Hazel')) || // Sometimes Hazel sounds more "AI"
+              voices[0];
+
+            if (preferredVoice) utterance.voice = preferredVoice;
+            utterance.pitch = 1.1; // Slightly higher for that refined AI tone
+            utterance.rate = 1.1;  // Slightly faster for Jarvis-like efficiency
+            window.speechSynthesis.speak(utterance);
           };
 
 
@@ -109,11 +109,11 @@ class SignalRService {
     }
   }
 
-  public async sendMessage(conversationId: string, content: string) {
+  public async sendMessage(conversationId: string, content: string, attachments?: any[]) {
     if (!this.connection) {
       await this.startConnection();
     }
-    
+
     // Wait for connection to be in 'Connected' state if it's still connecting
     if (this.connection?.state === signalR.HubConnectionState.Connecting) {
       await this.startPromise;
@@ -123,14 +123,14 @@ class SignalRService {
       throw new Error('SignalR connection not established');
     }
 
-    await this.connection.invoke('SendMessage', conversationId, content);
+    await this.connection.invoke('SendMessage', conversationId, content, attachments);
   }
 
-  public async sendGuestMessage(guestId: string, content: string) {
+  public async sendGuestMessage(guestId: string, content: string, attachments?: any[]) {
     if (!this.connection) {
       await this.startConnection();
     }
-    
+
     if (this.connection?.state === signalR.HubConnectionState.Connecting) {
       await this.startPromise;
     }
@@ -139,7 +139,7 @@ class SignalRService {
       throw new Error('SignalR connection not established');
     }
 
-    await this.connection.invoke('SendGuestMessage', guestId, content);
+    await this.connection.invoke('SendGuestMessage', guestId, content, attachments);
   }
   public async cancelGeneration() {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
@@ -155,7 +155,7 @@ class SignalRService {
     if (!this.connection) {
       await this.startConnection();
     }
-    
+
     if (this.connection?.state === signalR.HubConnectionState.Connecting) {
       await this.startPromise;
     }

@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { cn } from '../../lib/utils';
-import { Bot, Sparkles, MessageSquare, Code, Lightbulb, Pencil, Check, X, Volume2, VolumeX } from 'lucide-react';
+import { Bot, Sparkles, MessageSquare, Code, Lightbulb, Pencil, Check, X, Volume2, VolumeX, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -197,6 +197,32 @@ export function MessageList() {
                       </div>
                     ) : (
                       <>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            {msg.attachments.map((file, idx) => (
+                              <div key={idx} className="max-w-[200px] overflow-hidden rounded-lg border border-primary-foreground/20">
+                                {file.type?.startsWith('image/') ? (
+                                  <img 
+                                    src={file.url} 
+                                    alt="Attached" 
+                                    className="max-h-48 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity" 
+                                    onClick={() => window.open(file.url, '_blank')}
+                                  />
+                                ) : (
+                                  <a 
+                                    href={file.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 p-2 bg-primary-foreground/10 text-xs hover:bg-primary-foreground/20 transition-colors"
+                                  >
+                                    <Paperclip className="w-4 h-4" />
+                                    <span className="truncate max-w-[120px]">{file.name || 'Attachment'}</span>
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
                         {msg.id === lastUserMessageId && !isTyping && (
                           <button

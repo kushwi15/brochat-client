@@ -1,11 +1,13 @@
-import { Send, Square, Mic, MicOff, Loader2 } from 'lucide-react';
+import { Send, Square, Mic, MicOff, Loader2, Paperclip, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useChatStore } from '../../store/useChatStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { signalRService } from '../../services/signalrService';
 import { cn } from '../../lib/utils';
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function MessageInput() {
   const { 
@@ -14,12 +16,16 @@ export function MessageInput() {
     isTyping, 
     setTyping,
     isVoiceMode,
-    setIsVoiceMode
+    setIsVoiceMode,
+    selectedFiles,
+    setSelectedFiles
   } = useChatStore();
 
+  const { isAuthenticated } = useAuthStore();
   const { sendMessage } = useSendMessage();
   const [isAutoSending, setIsAutoSending] = useState(false);
   const autoSendTimerRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = async (overrideText?: string) => {
     // 1. Clear any pending auto-send timers
@@ -37,13 +43,34 @@ export function MessageInput() {
     // 3. Use the latest transcript if provided, otherwise fall back to store text
     const textToSend = overrideText || inputText;
 
-    if (textToSend.trim()) {
-      // 4. Small delay to ensure the browser has released the mic and settled the state
+    if (textToSend.trim() || selectedFiles.length > 0) {
+      // Clear immediately for a snappy UI
+      setInputText('');
+      setSelectedFiles([]);
+      
+      // 4. Perform the actual sending (which includes uploads) in the background
       setTimeout(async () => {
-        await sendMessage(textToSend);
-        setInputText(''); // Explicitly clear the input after sending the voice prompt
-      }, 200);
+        await sendMessage(textToSend, selectedFiles);
+      }, 50);
     }
+  };
+
+  const addFileLocally = (file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    const newAttachment = {
+      url: previewUrl,
+      type: file.type,
+      name: file.name,
+      file: file
+    };
+    setSelectedFiles(prev => [...prev, newAttachment]);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    addFileLocally(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Wrapper for manual button clicks to satisfy MouseEventHandler type
@@ -130,7 +157,67 @@ export function MessageInput() {
           <span>Sending in 2 seconds...</span>
         </div>
       )}
+
+      <AnimatePresence>
+        {selectedFiles.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0, y: 10 }}
+            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            exit={{ opacity: 0, height: 0, y: 10 }}
+            className="flex flex-wrap gap-2 px-4 mb-2 max-h-40 overflow-y-auto custom-scrollbar"
+          >
+            {selectedFiles.map((file, index) => (
+              <motion.div 
+                key={file.url} 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                layout
+                className="relative group w-20 h-20 shrink-0"
+              >
+                {file.type.startsWith('image/') ? (
+                  <img 
+                    src={file.url} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover rounded-xl border shadow-sm transition-transform group-hover:scale-[1.02]"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-muted rounded-xl border text-[10px] text-center p-1 transition-colors group-hover:bg-muted/80">
+                    <Paperclip className="w-6 h-6 mb-1 text-primary" />
+                    <span className="truncate w-full px-1">{file.name}</span>
+                  </div>
+                )}
+                <button 
+                  onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                  className="absolute -top-2 -right-2 bg-background border rounded-full p-1 shadow-md hover:text-destructive transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="relative flex items-end w-full bg-muted/50 rounded-3xl border focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-all p-2 gap-2">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          className="hidden" 
+          accept="image/*,application/pdf"
+        />
+        {isAuthenticated && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-10 h-10 rounded-full text-muted-foreground hover:bg-muted shrink-0 mb-0.5"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isTyping}
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+        )}
         <textarea
           value={inputText}
           onChange={(e) => {

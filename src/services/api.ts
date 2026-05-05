@@ -84,4 +84,11 @@ export const chatApi = {
   deleteConversation: (id: string) => api.delete(`/chat/${id}`),
   updateConversation: (id: string, title: string) => api.patch(`/chat/${id}`, { title }),
   updateMessage: (id: string, content: string) => api.patch(`/chat/message/${id}`, { content }),
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/file/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
 };
