@@ -13,9 +13,11 @@ npm install
 ### 2. Environment Configuration
 Create a `.env` file in the root directory:
 ```env
-VITE_API_BASE_URL=http://localhost:5110/api
-VITE_HUB_URL=http://localhost:5110/hubs/chat
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
+
+# Cloudinary (Frontend direct upload)
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 ```
 
 ### 3. Development
@@ -41,7 +43,8 @@ npm run dev
 ### Styling & UI
 - **Tailwind CSS 4**: Featuring the new high-performance engine and zero-config setup.
 - **Shadcn UI (Radix UI)**: Accessible, headless components styled with custom CSS variables for easy theme switching.
-- **Framer Motion**: Powering the sidebar transitions, message entrance animations, and "typing" indicators.
+- **Framer Motion**: Powering the sidebar transitions, message entrance animations, and the new **smooth-slide file preview system**.
+- **Cloudinary SDK**: Integrated for high-performance, deferred media uploads.
 
 ---
 
@@ -72,9 +75,12 @@ Unlike traditional REST requests, BroChat uses a persistent WebSocket connection
 When enabled, the app uses the `window.speechSynthesis` API. It specifically filters for "Google UK English Male" or "George" voices. If the preferred voice isn't available, it falls back gracefully to the best available system voice.
 
 ### 3. Intelligent Guest Mode
-Guests are assigned a unique UUID stored in `localStorage`. The backend tracks this UUID to enforce rate limits (5 messages/10 mins). If the limit is reached, a premium-styled modal encourages registration to continue.
+Guests are assigned a unique UUID stored in `localStorage`. The backend tracks this UUID to enforce rate limits (5 messages/10 mins). To maintain performance and security, **multimodal file uploads are disabled for guests**, encouraging users to register for the full experience.
 
-### 4. Code Syntax Highlighting
+### 4. Multimodal Vision (Images & PDFs)
+BroChat is now fully multimodal. Users can drag and drop multiple images or PDFs directly into the chat. Files are previewed locally with instant feedback and only uploaded to Cloudinary when the message is actually sent.
+
+### 5. Code Syntax Highlighting
 AI responses containing code blocks are automatically detected and styled using custom CSS, making BroChat an excellent tool for developers.
 
 ---
